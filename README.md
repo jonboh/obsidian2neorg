@@ -14,7 +14,7 @@ You'll need to have [rustup](https://rustup.rs/) installed. Then install with Ca
 cargo install obsidian2neorg
 ```
 
-## Transforming in bulk
+## Bulk Transformations
 You can find in this repository a shell script that will transform all `.md` files
 in a folder and copy all other files. I've used this script to port all my notes to
 Neorg using obsidian2neorg.
