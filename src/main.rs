@@ -1,6 +1,7 @@
 #![allow(clippy::disallowed_names, unused_variables, dead_code)]
 use regex::Regex;
 
+use clap::Parser;
 use std::io::{self, Read, Write};
 
 fn transform_bold(input: &str) -> String {
@@ -83,16 +84,33 @@ fn transform_simple_obsidian_links(text: &str) -> String {
     transformed_text.to_string()
 }
 
+fn transform_obsidian_links_literal(text: &str) -> String {
+    let re = Regex::new(r"\[\[([^|\]]+)\s*\|\s*([^]]+)\]\]").unwrap();
+    let transformed_text = re.replace_all(text, "[$2]{:$1:}");
+    transformed_text.to_string()
+}
+
+fn transform_simple_obsidian_links_literal(text: &str) -> String {
+    let re = Regex::new(r"\[\[([^|\]]+)\]\]").unwrap();
+    let transformed_text = re.replace_all(text, "{:$1:}");
+    transformed_text.to_string()
+}
+
 fn transform_markdown_links(text: &str) -> String {
     let re = Regex::new(r"\[(.*?)\]\((.*?)\)").unwrap();
     let replaced_text = re.replace_all(text, "[$1]{$2}");
     replaced_text.into_owned()
 }
 
-fn transform_obsidian(text: &str) -> String {
+fn transform_obsidian(text: &str, literal_links: bool) -> String {
     let mut text = transform_codeblocks(text);
-    text = transform_simple_obsidian_links(&text);
-    text = transform_obsidian_links(&text);
+    if literal_links {
+        text = transform_simple_obsidian_links_literal(&text);
+        text = transform_obsidian_links_literal(&text);
+    } else {
+        text = transform_simple_obsidian_links(&text);
+        text = transform_obsidian_links(&text);
+    }
     text = transform_markdown_links(&text);
     text = transform_italic(&text); // this has to go before bold
     text = transform_bold(&text);
@@ -101,24 +119,28 @@ fn transform_obsidian(text: &str) -> String {
     text
 }
 
-fn main() {
-    let matches = clap::Command::new("obsidian2neorg")
-        .bin_name("obsidian2neorg")
-        .version("0.1.0")
-        .author("jonboh")
-        .about("Transform obsidian markdown into neorg")
-        .after_help(
-            r#"Takes input in stdin and outputs the transformation in stdout.
+#[derive(Parser, Clone)]
+#[command(
+    author,
+    about,
+    after_help = r#"Takes input in stdin and outputs the transformation in stdout.
 To transform a file do:
-cat file.md | obsidian2neorg > file.norg
-                    "#,
-        )
-        .get_matches();
+    cat file.md | obsidian2neorg > file.norg"#
+)]
+struct Args {
+    /// Keep links literally. Otherwise they are forced to be lowercase and spaces are
+    /// substituted with dashes.
+    #[arg(long)]
+    literal_links: bool,
+}
+
+fn main() {
+    let args = Args::parse();
     let mut input_text = String::new();
     io::stdin()
         .read_to_string(&mut input_text)
         .expect("Failed to read input");
-    let neorg_text = transform_obsidian(&input_text);
+    let neorg_text = transform_obsidian(&input_text, args.literal_links);
     io::stdout()
         .write_all(neorg_text.as_bytes())
         .expect("Failed to write output");
@@ -349,7 +371,8 @@ enum Some {
     OtherVariant,
 }
 ```
-"#
+"#,
+                false
             ),
             r#"
 ** This is a l2 heading
