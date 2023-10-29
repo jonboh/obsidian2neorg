@@ -1,7 +1,6 @@
 #![allow(clippy::disallowed_names, unused_variables, dead_code)]
 use regex::Regex;
 
-use clap::App;
 use std::io::{self, Read, Write};
 
 fn transform_bold(input: &str) -> String {
@@ -87,10 +86,16 @@ fn transform_obsidian(text: &str) -> String {
 }
 
 fn main() {
-    let matches = App::new("obsidian2neorg")
+    let matches = clap::Command::new("obsidian2neorg")
+        .bin_name("obsidian2neorg")
         .version("0.1.0")
         .author("jonboh")
         .about("Transform obsidian markdown into neorg")
+        .after_help(r#"Takes input in stdin and outputs the transformation in stdout.
+To transform a file do:
+cat file.md | obsidian2neorg > file.norg
+                    "#)
+
         .get_matches();
     let mut input_text = String::new();
     io::stdin()
