@@ -2,6 +2,13 @@
 name = "obsidian2neorg"
 version = "0.1.0"
 edition = "2021"
+authors = ["jonboh"]
+description = "Transform obsidian markdown into neorg"
+homepage = "https://github.com/jonboh/obsidian2neorg"
+repository = "https://github.com/jonboh/obsidian2neorg"
+license = "MIT"
+keywords = ["cli", "neorg", "obsidian", "markdown"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
