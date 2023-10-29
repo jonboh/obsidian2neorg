@@ -57,13 +57,29 @@ fn transform_headings(text: &str) -> String {
 
 fn transform_obsidian_links(text: &str) -> String {
     let re = Regex::new(r"\[\[([^|\]]+)\s*\|\s*([^]]+)\]\]").unwrap();
-    let transformed_text = re.replace_all(text, "[$2]{:$1:}");
+    let transformed_text = re.replace_all(text, |caps: &regex::Captures| {
+        let first_capture = caps
+            .get(1)
+            .unwrap()
+            .as_str()
+            .to_lowercase()
+            .replace(' ', "-");
+        format!("[{}]{{:{}:}}", caps.get(2).unwrap().as_str(), first_capture)
+    });
     transformed_text.to_string()
 }
 
 fn transform_simple_obsidian_links(text: &str) -> String {
     let re = Regex::new(r"\[\[([^|\]]+)\]\]").unwrap();
-    let transformed_text = re.replace_all(text, "{:$1:}");
+    let transformed_text = re.replace_all(text, |caps: &regex::Captures| {
+        let first_capture = caps
+            .get(1)
+            .unwrap()
+            .as_str()
+            .to_lowercase()
+            .replace(' ', "-");
+        format!("{{:{}:}}", first_capture)
+    });
     transformed_text.to_string()
 }
 
@@ -91,11 +107,12 @@ fn main() {
         .version("0.1.0")
         .author("jonboh")
         .about("Transform obsidian markdown into neorg")
-        .after_help(r#"Takes input in stdin and outputs the transformation in stdout.
+        .after_help(
+            r#"Takes input in stdin and outputs the transformation in stdout.
 To transform a file do:
 cat file.md | obsidian2neorg > file.norg
-                    "#)
-
+                    "#,
+        )
         .get_matches();
     let mut input_text = String::new();
     io::stdin()
@@ -124,7 +141,7 @@ mod tests {
 This is a [[some content]] and [[another link | with title]]."#
             ),
             r#"
-This is a {:some content:} and [[another link | with title]]."#
+This is a {:some-content:} and [[another link | with title]]."#
         );
         assert_eq!(
             &transform_simple_obsidian_links(
@@ -132,7 +149,7 @@ This is a {:some content:} and [[another link | with title]]."#
 This is a [[some content]] and [[another link|with title]]."#
             ),
             r#"
-This is a {:some content:} and [[another link|with title]]."#
+This is a {:some-content:} and [[another link|with title]]."#
         );
     }
 
@@ -158,7 +175,7 @@ This is a {:some content:} and [[another link|with title]]."#
 This is a [[some content]] and [[another link|with an alias]]. And a [markdown](http://link.com)"#
             ),
             r#"
-This is a [[some content]] and [with an alias]{:another link:}. And a [markdown](http://link.com)"#
+This is a [[some content]] and [with an alias]{:another-link:}. And a [markdown](http://link.com)"#
         );
     }
 
@@ -336,7 +353,7 @@ enum Some {
             ),
             r#"
 ** This is a l2 heading
-This is a {:some link:} and [with title]{:another link:}.
+This is a {:some-link:} and [with title]{:another-link:}.
 There is also a [link to github]{https://github.com/jonboh}
 Then there's some text, *bold text* and some /italic text/ as well
 - We have
