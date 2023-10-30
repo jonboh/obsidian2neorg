@@ -67,6 +67,6 @@ find "$folder_path" -type f -not -path "*/.git/*" -name "*.md" | while read -r f
     relative_path="${file#$folder_path/}"
     out_file="${out_path}/${relative_path%.md}.norg"
     mkdir -p "$(dirname "$out_file")"
-    cat "$file" | obsidian2neorg > "$out_file"
+    cat "$file" | obsidian2neorg --literal-links > "$out_file"
 done
 ```
