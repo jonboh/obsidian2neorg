@@ -9,7 +9,7 @@ find "$folder_path" -type f -not -path "*/.git/*" -not -name "*.md" | while read
 done
 
 find "$folder_path" -type f -not -path "*/.git/*" -name "*.md" | while read -r file; do
-    lowercase_filename=$(basename "$file" | tr '[:upper:]' '[:lower:]')
+    lowercase_filename=$(echo "$file" | tr '[:upper:]' '[:lower:]')
     final_filename=${lowercase_filename// /-}
     relative_path="${final_filename#$folder_path/}"
     out_file="${out_path}/${relative_path%.md}.norg"
